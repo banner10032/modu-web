@@ -13,7 +13,7 @@ import {
 import { sha256, sha256Bytes, randomId } from './crypto'
 import { validateWritingSkillImport } from './writing-skill'
 
-const DB_NAME = 'zhijuan'
+const DB_NAME = 'modu'
 const DB_VERSION = 1
 const STORE_PROJECTS = 'projects'
 const STORE_CHAPTERS = 'chapters'

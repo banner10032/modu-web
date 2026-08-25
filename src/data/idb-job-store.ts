@@ -60,7 +60,7 @@ export class IdbJobStore implements JobStore {
 
   private async openDB(): Promise<IDBDatabase> {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open('zhijuan', 1)
+      const request = indexedDB.open('modu', 1)
       request.onerror = () => reject(request.error)
       request.onsuccess = () => resolve(request.result)
       request.onupgradeneeded = () => {

@@ -20,7 +20,7 @@ export interface StoredProviderSettings {
   kind: ProviderKind
 }
 
-const STORAGE_KEY = 'zhijuan-provider-settings'
+const STORAGE_KEY = 'modu-provider-settings'
 const MAX_PROFILES = 20
 
 interface StoredCollection {

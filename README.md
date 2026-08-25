@@ -1,6 +1,6 @@
-# 织卷 Web
+# 墨渡 Web
 
-织卷是个人单设备使用的本地优先 AI 长篇小说生成与阅读应用。本版本从 Android（Kotlin + Jetpack Compose）重构为 Web（React + TypeScript + Vite）。
+墨渡（modu）是个人单设备使用的本地优先 AI 长篇小说生成与阅读应用。本版本从 Android（Kotlin + Jetpack Compose）重构为 Web（React + TypeScript + Vite）。
 
 ## 功能
 
@@ -8,7 +8,7 @@
 - **创作**：五字段建书（书名/题材/主角/基调/核心设定）+ 16 种题材预设 + 叙事尺度 + 剧情节奏
 - **生成**：AI 逐章生成（正文流式 + 结构化结算），可选 1/2/3 章顺序续写
 - **阅读**：Markdown 正文阅读、章节目录、上下章导航、字号/行距/主题设置、阅读位置记忆
-- **Provider 设置**：多组 OpenAI 兼容配置（DeepSeek/通义千问/智谱 GLM/Kimi/自定义），API Key 本机加密
+- **Provider 设置**：多组 OpenAI 兼容配置（通义千问/DeepSeek/智谱 GLM/Kimi/自定义），API Key 本机加密
 - **写作质量卡**：导入 .md/.json 创作规则，安全过滤，影响后续正文写法
 
 ## 技术栈

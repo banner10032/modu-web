@@ -6,8 +6,8 @@
 import { randomId, toBase64, fromBase64 } from './crypto'
 
 const ALIAS_PATTERN = /^novel_api_key_[A-Za-z0-9_-]+$/
-const KEY_STORAGE_KEY = 'zhijuan-master-key'
-const SALT_STORAGE_KEY = 'zhijuan-master-salt'
+const KEY_STORAGE_KEY = 'modu-master-key'
+const SALT_STORAGE_KEY = 'modu-master-salt'
 
 let cachedCryptoKey: CryptoKey | null = null
 

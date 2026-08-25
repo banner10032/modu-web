@@ -1,5 +1,5 @@
 /**
- * 织卷 Web 主应用 — 从 Kotlin ZhijuanS0App 翻译。
+ * 墨渡 Web 主应用 — 从 Kotlin ZhijuanS0App 翻译。
  * 四路由：设置 / 书库 / 生成 / 阅读
  */
 
@@ -166,7 +166,7 @@ function AppContent() {
     try {
       const { blob, result } = await archive.export(projectId)
       const snapshot = await repositoryRef.current!.loadProject(projectId)
-      const fileName = `${snapshot!.project.title.replace(/[\\/:*?"<>|]/g, '_').trim() || '织卷项目'}.zhijuan.json`
+      const fileName = `${snapshot!.project.title.replace(/[\\/:*?"<>|]/g, '_').trim() || '墨渡项目'}.modu.json`
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url; a.download = fileName; a.click()
@@ -401,7 +401,7 @@ function AppContent() {
               await repositoryRef.current!.removeWritingSkill(writingSkillProjectId)
               await refreshProjects(writingSkillProjectId)
               setWritingSkillProjectId(null); setWritingSkillCandidate(null)
-              showMessage('创作 Skill 已移除；后续使用织卷默认质量卡')
+              showMessage('创作 Skill 已移除；后续使用墨渡默认质量卡')
             } catch { showMessage('移除失败：生成或安全提交期间不能修改质量卡') }
           }}
           onDiscardCandidate={() => { setWritingSkillCandidate(null); setWritingSkillError(null) }}
@@ -430,7 +430,7 @@ function AppContent() {
 
       {showPlanRefresh && state.snapshot && (
         <BottomSheet title="准备后续章节" onClose={() => setShowPlanRefresh(false)}>
-          <p>织卷会在本机准备接下来的章节方向，不展示内部规划，不调用模型，也不会自动开始写作。</p>
+          <p>墨渡会在本机准备接下来的章节方向，不展示内部规划，不调用模型，也不会自动开始写作。</p>
           <PrimaryButton label="确认准备后续章节" onClick={handleRefreshPlan} />
         </BottomSheet>
       )}

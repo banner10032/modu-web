@@ -1,7 +1,7 @@
 /**
  * 项目归档导入导出 — 从 Kotlin S4ProjectArchive.kt 翻译。
  * 用 JSZip 逻辑手动实现（不引入额外依赖，用 Blob + 结构化 JSON）。
- * 导出为 .zhijuan.json（包含 manifest + 所有文件内容）。
+ * 导出为 .modu.json（包含 manifest + 所有文件内容）。
  */
 
 import type { IdbNovelRepository } from './idb-repository'
@@ -20,7 +20,7 @@ export interface ArchiveResult {
   contentSha256: string
 }
 
-const MANIFEST_PATH = 'zhijuan-export-manifest.json'
+const MANIFEST_PATH = 'modu-export-manifest.json'
 const REQUIRED_PATHS = new Set(['project.json', 'state.json', 'plan.json'])
 
 class ArchiveError extends Error {

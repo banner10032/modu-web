@@ -26,8 +26,8 @@ export function BrandBar({ title, actionIcon, actionDescription, onAction }: {
   return (
     <div className="brand-bar">
       <div className="brand-bar-left">
-        <span className="brand-logo">织</span>
-        <span className="brand-name">织卷</span>
+        <span className="brand-logo">墨</span>
+        <span className="brand-name">墨渡</span>
       </div>
       <h1 className="brand-bar-title">{title}</h1>
       {actionIcon && onAction && (

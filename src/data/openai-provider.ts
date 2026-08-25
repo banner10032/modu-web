@@ -535,8 +535,8 @@ export class OpenAiCompatibleProvider implements TextGenerationProvider {
       })
     }
     return JSON.stringify({
-      source: 'zhijuan_default',
-      name: '织卷默认质量卡',
+      source: 'modu_default',
+      name: '墨渡默认质量卡',
       version: 1,
       rules: ['叙事清晰', '人物行动可见', '场景推进具体', '结尾形成自然钩子'],
       avoid: [],

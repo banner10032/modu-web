@@ -94,7 +94,7 @@ export function useStore(): StoreContextValue {
 
 // ─── 阅读偏好持久化 ─────────────────────────────────────────
 
-const PREFS_KEY = 'zhijuan-reader-preferences'
+const PREFS_KEY = 'modu-reader-preferences'
 
 export function loadPreferences(): ReaderPreferences {
   try {
@@ -110,7 +110,7 @@ export function savePreferences(prefs: ReaderPreferences): void {
 
 // ─── 阅读位置持久化 ─────────────────────────────────────────
 
-const POS_KEY = 'zhijuan-reader-positions'
+const POS_KEY = 'modu-reader-positions'
 
 export interface ReaderPosition {
   chapterNumber: number

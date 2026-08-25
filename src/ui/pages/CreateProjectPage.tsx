@@ -116,7 +116,7 @@ export function CreateProjectSheet({ onDismiss, onConfirm, writingSkill, writing
         />
       )}
 
-      <p className="muted-text">确认后，织卷会在本机建立后续写作所需的连续性状态；不会调用模型。</p>
+      <p className="muted-text">确认后，墨渡会在本机建立后续写作所需的连续性状态；不会调用模型。</p>
       <PrimaryButton label="确认信息" onClick={() => {
         const draft = buildInitialProjectDraft(title, genre, protagonist, tone, premise, selectedContentScale, selectedPlotPace)
         if (writingSkill) draft.writingSkill = writingSkill
@@ -144,7 +144,7 @@ export function WritingSkillPreview({ writingSkill, error, onChoose, onConfirm, 
     return (
       <>
         <SecondaryButton label="选择 .md 或 .json" onClick={onChoose} />
-        <p className="muted-text">未导入时继续使用织卷默认质量卡。</p>
+        <p className="muted-text">未导入时继续使用墨渡默认质量卡。</p>
       </>
     )
   }
@@ -206,7 +206,7 @@ export function WritingSkillSheet({ projectTitle, current, candidate, error, onD
         <p className="error-text">现有 Skill 已损坏并安全禁用；正文与已有章节不受影响。</p>
       )}
       {current.status === WritingSkillStatus.NONE && (
-        <p className="muted-text">当前使用织卷默认质量卡。</p>
+        <p className="muted-text">当前使用墨渡默认质量卡。</p>
       )}
       <WritingSkillPreview writingSkill={candidate} error={error} onChoose={onChoose} onConfirm={onApply} onRemove={onDiscardCandidate} />
       {current.status !== WritingSkillStatus.NONE && (
