@@ -9,6 +9,7 @@ import { ContentScale, PlotPace, WritingSkillStatus } from '../core/domain'
 import { GenerationCoordinator } from '../core/generation-coordinator'
 import { runSequentialBatch } from '../core/sequential-batch'
 import { RecoveryAuditor, RecoveryAction } from '../core/generation-job'
+import { checkConsistency } from '../core/consistency-checker'
 import { IdbNovelRepository } from '../data/idb-repository'
 import { IdbJobStore } from '../data/idb-job-store'
 import { createProvider, OpenAiCompatibleProvider } from '../data/openai-provider'
@@ -41,6 +42,7 @@ function AppContent() {
   const [createWritingSkillCandidate, setCreateWritingSkillCandidate] = useState<WritingSkillImport | null>(null)
   const [contentScaleProjectId, setContentScaleProjectId] = useState<string | null>(null)
   const [plotPaceProjectId, setPlotPaceProjectId] = useState<string | null>(null)
+  const [showConsistency, setShowConsistency] = useState(false)
 
   const repositoryRef = useRef<IdbNovelRepository | null>(null)
   const providerRef = useRef<OpenAiCompatibleProvider | null>(null)
@@ -174,6 +176,26 @@ function AppContent() {
       showMessage('备份已导出')
     } catch {
       showMessage('导出失败，项目仍安全保留在本机')
+    } finally {
+      setArchiveBusy(false)
+    }
+  }
+
+  const handleExportWholeBook = async (projectId: string, format: 'txt' | 'md') => {
+    const archive = archiveRef.current
+    if (!archive) return
+    setArchiveBusy(true)
+    try {
+      const blob = await archive.exportWholeBook(projectId, format)
+      const snapshot = await repositoryRef.current!.loadProject(projectId)
+      const safeName = snapshot!.project.title.replace(/[\\/:*?"<>|]/g, '_').trim() || '墨渡项目'
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = `${safeName}.${format}`; a.click()
+      URL.revokeObjectURL(url)
+      showMessage(`整书已导出为 ${format.toUpperCase()}`)
+    } catch {
+      showMessage('整书导出失败，项目仍安全保留在本机')
     } finally {
       setArchiveBusy(false)
     }
@@ -317,6 +339,7 @@ function AppContent() {
               setRoute('READER')
             }}
             onExport={handleExport}
+            onExportWholeBook={handleExportWholeBook}
             onImport={() => importInputRef.current?.click()}
             onDelete={handleDelete}
             onManageWritingSkill={(id) => { setWritingSkillProjectId(id); setWritingSkillCandidate(null); setWritingSkillError(null) }}
@@ -362,6 +385,7 @@ function AppContent() {
               if (state.providerConfigured) { setRoute('GENERATION'); startGeneration(state.snapshot.project.id, count) }
               else { setRoute('CONNECT_SETTINGS'); showMessage('请先添加并验证一个 API 配置') }
             }}
+            onCheckConsistency={() => setShowConsistency(true)}
           />
         )}
       </div>
@@ -434,6 +458,37 @@ function AppContent() {
           <PrimaryButton label="确认准备后续章节" onClick={handleRefreshPlan} />
         </BottomSheet>
       )}
+
+      {showConsistency && state.snapshot && (() => {
+        const report = checkConsistency(state.snapshot)
+        return (
+          <BottomSheet title="一致性检查" onClose={() => setShowConsistency(false)}>
+            <p className="muted-text">已检查 {report.checkedChapters} 个已完成章节，{report.issues.length === 0 ? '未发现问题' : `发现 ${report.issues.length} 项待关注`}。</p>
+            {report.issues.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 12 }}>
+                {report.issues.map((issue, i) => (
+                  <div key={i} style={{
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    background: issue.severity === 'error' ? 'rgba(176,23,23,0.08)' : 'rgba(168,79,8,0.08)',
+                    border: `1px solid ${issue.severity === 'error' ? 'rgba(176,23,23,0.2)' : 'rgba(168,79,8,0.2)'}`,
+                  }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: issue.severity === 'error' ? '#B01717' : '#A84F08' }}>
+                      {issue.severity === 'error' ? '错误' : '警告'}
+                      {issue.chapter != null ? ` · 第 ${issue.chapter} 章` : ''}
+                    </span>
+                    <p style={{ fontSize: 14, marginTop: 4, lineHeight: 1.5 }}>{issue.message}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            {report.passed && report.issues.length > 0 && (
+              <p className="muted-text" style={{ marginTop: 12 }}>仅有警告级别提示，未影响章节提交。</p>
+            )}
+            <PrimaryButton label="完成" onClick={() => setShowConsistency(false)} />
+          </BottomSheet>
+        )
+      })()}
 
       {/* 隐藏文件输入 */}
       <input ref={importInputRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) handleImport(f); e.target.value = '' }} />

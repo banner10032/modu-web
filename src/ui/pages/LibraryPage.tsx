@@ -29,7 +29,7 @@ function recoveryLabel(action: RecoveryAction): string {
 
 export function LibraryPage({
   projects, activeProjectId, runningProjectId, recoveryActions, archiveBusy,
-  onCreate, onSelect, onGenerate, onRead, onExport, onImport, onDelete,
+  onCreate, onSelect, onGenerate, onRead, onExport, onExportWholeBook, onImport, onDelete,
   onManageWritingSkill, onManageContentScale, onManagePlotPace,
 }: {
   projects: ProjectSnapshot[]
@@ -42,6 +42,7 @@ export function LibraryPage({
   onGenerate: (projectId: string) => void
   onRead: (projectId: string) => void
   onExport: ((projectId: string) => void) | null
+  onExportWholeBook: ((projectId: string, format: 'txt' | 'md') => void) | null
   onImport: (() => void) | null
   onDelete: (projectId: string) => void
   onManageWritingSkill: (projectId: string) => void
@@ -132,6 +133,16 @@ export function LibraryPage({
                         <button className="menu-item" disabled={archiveBusy} onClick={() => { setExpandedMenu(null); onExport(project.project.id) }}>
                           导出备份
                         </button>
+                      )}
+                      {onExportWholeBook && project.chapters.length > 0 && (
+                        <>
+                          <button className="menu-item" disabled={archiveBusy} onClick={() => { setExpandedMenu(null); onExportWholeBook(project.project.id, 'md') }}>
+                            导出整书 Markdown
+                          </button>
+                          <button className="menu-item" disabled={archiveBusy} onClick={() => { setExpandedMenu(null); onExportWholeBook(project.project.id, 'txt') }}>
+                            导出整书 TXT
+                          </button>
+                        </>
                       )}
                       <hr className="menu-divider" />
                       <button className="menu-item menu-item-danger" onClick={() => { setExpandedMenu(null); setDeleteCandidate(project) }}>

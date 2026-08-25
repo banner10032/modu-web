@@ -1,19 +1,30 @@
 /**
  * 阅读页面 — 从 Kotlin ReaderScreen 翻译。
+ * 桌面端：左侧目录 + 右侧正文双栏布局。
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react'
-import type { ProjectSnapshot, Chapter } from '../../core/domain'
+import { useState, useRef, useEffect } from 'react'
+import type { ProjectSnapshot } from '../../core/domain'
 import { ChapterState } from '../../core/domain'
 import type { ReaderPreferences } from '../theme'
 import { getColors } from '../theme'
 import type { ReaderPosition } from '../store'
-import { planWindowNeedsRefresh } from '../../core/continuity'
 import { PrimaryButton, BottomSheet, chapterStateEditorialLabel, StateLabel } from '../components'
+
+function useIsDesktop(): boolean {
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const handler = () => setIsDesktop(mq.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return isDesktop
+}
 
 export function ReaderPage({
   snapshot, preferences, initialPosition, onPositionChange, onBack, onReturnToCreation,
-  generationInProgress, onOpenGeneration, onContinueWriting,
+  generationInProgress, onOpenGeneration, onContinueWriting, onCheckConsistency,
 }: {
   snapshot: ProjectSnapshot | null
   preferences: ReaderPreferences
@@ -24,7 +35,9 @@ export function ReaderPage({
   generationInProgress: boolean
   onOpenGeneration: () => void
   onContinueWriting: (chapterCount: number) => void
+  onCheckConsistency: () => void
 }) {
+  const isDesktop = useIsDesktop()
   const chapters = (snapshot?.chapters ?? []).slice().sort((a, b) => a.number - b.number)
   const [selectedChapterNumber, setSelectedChapterNumber] = useState<number>(
     initialPosition?.chapterNumber && chapters.some(c => c.number === initialPosition.chapterNumber)
@@ -81,79 +94,146 @@ export function ReaderPage({
     ? colors.background
     : colors.paperLight
 
+  const directory = (
+    <DirectoryList
+      snapshot={snapshot}
+      selectedChapterNumber={chapter.number}
+      onChapterSelected={(num) => { setSelectedChapterNumber(num); if (!isDesktop) setShowDirectory(false) }}
+    />
+  )
+
   return (
     <div className="page reader-page" style={{ background: readerBg, color: colors.onSurface }}>
-      <div
-        className="reader-content-toggle"
-        onClick={() => setChromeVisible(!chromeVisible)}
-      >
-        <div className="reader-scroll-container" ref={scrollRef} style={{ maxHeight: '100vh', overflowY: 'auto' }}>
-          <div className="reader-inner">
-            <h1 className="reader-chapter-heading">第 {chapter.number} 章</h1>
-            <div className="reader-chapter-underline" style={{ background: colors.primary }} />
-            <div
-              className="reader-prose"
-              style={{
-                fontFamily: 'serif',
-                fontSize: `${preferences.fontSize}px`,
-                lineHeight: `${preferences.lineHeight}px`,
-              }}
-            >
-              {chapter.prose}
-            </div>
-            <div className="reader-end-hint">
-              {autoNextChapter ? '继续上滑进入下一章' : nextChapter ? '下一章尚未完成' : '已读至当前最新章节'}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {chromeVisible && (
-        <div className="reader-chrome-top" style={{ background: readerBg }}>
-          <button className="btn btn-text" onClick={onBack} style={{ color: colors.onSurface }}>← 返回</button>
-          <span className="reader-chrome-title" style={{ color: colors.onSurface }}>{snapshot.project.title}</span>
-          <button
-            className="btn btn-text"
-            onClick={() => generationInProgress ? onOpenGeneration() : setShowContinueSheet(true)}
-            style={{ color: colors.primary }}
-          >
-            {generationInProgress ? '生成中' : '续写'}
-          </button>
-        </div>
-      )}
-
-      {chromeVisible && (
-        <div className="reader-chrome-bottom" style={{ background: readerBg }}>
-          <button
-            className="btn btn-text"
-            disabled={selectedIndex <= 0}
-            onClick={() => setSelectedChapterNumber(chapters[selectedIndex - 1].number)}
-            style={{ color: colors.onSurface }}
-          >
-            ← 上一章
-          </button>
-          <button className="btn btn-text" onClick={() => setShowDirectory(true)} style={{ color: colors.onSurface }}>
-            目录 {selectedIndex + 1}/{chapters.length}
-          </button>
-          {selectedIndex < chapters.length - 1 ? (
+      {/* 桌面端：左侧固定目录栏 */}
+      {isDesktop && (
+        <aside className="reader-sidebar">
+          <div className="reader-sidebar-header">
+            <button className="btn btn-text" onClick={onBack} style={{ color: colors.onSurface }}>← 返回</button>
+            <span className="reader-sidebar-title" style={{ color: colors.onSurface }}>{snapshot.project.title}</span>
             <button
               className="btn btn-text"
-              onClick={() => setSelectedChapterNumber(chapters[selectedIndex + 1].number)}
+              onClick={onCheckConsistency}
               style={{ color: colors.onSurface }}
             >
-              下一章 →
+              检查
             </button>
-          ) : (
             <button
               className="btn btn-text"
               onClick={() => generationInProgress ? onOpenGeneration() : setShowContinueSheet(true)}
               style={{ color: colors.primary }}
             >
-              {generationInProgress ? '生成中' : '续写'} →
+              {generationInProgress ? '生成中' : '续写'}
             </button>
-          )}
-        </div>
+          </div>
+          {directory}
+        </aside>
       )}
+
+      {/* 主区域 */}
+      <div className="reader-main">
+        <div
+          className="reader-content-toggle"
+          onClick={() => !isDesktop && setChromeVisible(!chromeVisible)}
+        >
+          <div className="reader-scroll-container" ref={scrollRef} style={{ maxHeight: '100vh', overflowY: 'auto' }}>
+            <div className="reader-inner">
+              <h1 className="reader-chapter-heading">第 {chapter.number} 章</h1>
+              <div className="reader-chapter-underline" style={{ background: colors.primary }} />
+              <div
+                className="reader-prose"
+                style={{
+                  fontFamily: 'serif',
+                  fontSize: `${preferences.fontSize}px`,
+                  lineHeight: `${preferences.lineHeight}px`,
+                }}
+              >
+                {chapter.prose}
+              </div>
+              <div className="reader-end-hint">
+                {autoNextChapter ? '继续上滑进入下一章' : nextChapter ? '下一章尚未完成' : '已读至当前最新章节'}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {chromeVisible && (
+          <div className="reader-chrome-top" style={{ background: readerBg }}>
+            {isDesktop ? (
+              <>
+                <span className="reader-chrome-title" style={{ color: colors.onSurface }}>第 {chapter.number} 章 · {selectedIndex + 1}/{chapters.length}</span>
+                <button
+                  className="btn btn-text"
+                  onClick={onCheckConsistency}
+                  style={{ color: colors.onSurface }}
+                >
+                  检查
+                </button>
+                <button
+                  className="btn btn-text"
+                  onClick={() => generationInProgress ? onOpenGeneration() : setShowContinueSheet(true)}
+                  style={{ color: colors.primary }}
+                >
+                  {generationInProgress ? '生成中' : '续写'}
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="btn btn-text" onClick={onBack} style={{ color: colors.onSurface }}>← 返回</button>
+                <span className="reader-chrome-title" style={{ color: colors.onSurface }}>{snapshot.project.title}</span>
+                <button
+                  className="btn btn-text"
+                  onClick={onCheckConsistency}
+                  style={{ color: colors.onSurface }}
+                >
+                  检查
+                </button>
+                <button
+                  className="btn btn-text"
+                  onClick={() => generationInProgress ? onOpenGeneration() : setShowContinueSheet(true)}
+                  style={{ color: colors.primary }}
+                >
+                  {generationInProgress ? '生成中' : '续写'}
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
+        {chromeVisible && (
+          <div className="reader-chrome-bottom" style={{ background: readerBg }}>
+            <button
+              className="btn btn-text"
+              disabled={selectedIndex <= 0}
+              onClick={() => setSelectedChapterNumber(chapters[selectedIndex - 1].number)}
+              style={{ color: colors.onSurface }}
+            >
+              ← 上一章
+            </button>
+            {!isDesktop && (
+              <button className="btn btn-text" onClick={() => setShowDirectory(true)} style={{ color: colors.onSurface }}>
+                目录 {selectedIndex + 1}/{chapters.length}
+              </button>
+            )}
+            {selectedIndex < chapters.length - 1 ? (
+              <button
+                className="btn btn-text"
+                onClick={() => setSelectedChapterNumber(chapters[selectedIndex + 1].number)}
+                style={{ color: colors.onSurface }}
+              >
+                下一章 →
+              </button>
+            ) : (
+              <button
+                className="btn btn-text"
+                onClick={() => generationInProgress ? onOpenGeneration() : setShowContinueSheet(true)}
+                style={{ color: colors.primary }}
+              >
+                {generationInProgress ? '生成中' : '续写'} →
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       {showContinueSheet && (
         <BottomSheet title="续写后续章节" onClose={() => setShowContinueSheet(false)}>
@@ -186,13 +266,9 @@ export function ReaderPage({
         </BottomSheet>
       )}
 
-      {showDirectory && (
+      {!isDesktop && showDirectory && (
         <BottomSheet title="章节目录" onClose={() => setShowDirectory(false)}>
-          <DirectoryList
-            snapshot={snapshot}
-            selectedChapterNumber={chapter.number}
-            onChapterSelected={(num) => { setSelectedChapterNumber(num); setShowDirectory(false) }}
-          />
+          {directory}
         </BottomSheet>
       )}
     </div>

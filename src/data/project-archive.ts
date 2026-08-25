@@ -175,4 +175,41 @@ export class ProjectArchive {
     }
     return sha256Bytes(new TextEncoder().encode(parts.join('\0')))
   }
+
+  // ─── 整书导出 ─────────────────────────────────────────────
+
+  async exportWholeBook(projectId: string, format: 'txt' | 'md'): Promise<Blob> {
+    const data = await this.repository.exportProjectData(projectId)
+    if (!data) throw new ArchiveError('PROJECT_NOT_FOUND')
+
+    const chapters = data.chapters
+      .filter(c => c.prose.trim())
+      .sort((a, b) => a.number - b.number)
+
+    const title = data.project.title
+    const author = data.project.protagonist
+    const parts: string[] = []
+
+    if (format === 'md') {
+      parts.push(`# ${title}\n`)
+      parts.push(`> ${data.project.genre} · ${data.project.tone}\n`)
+      parts.push(`\n---\n`)
+      for (const ch of chapters) {
+        parts.push(`\n## 第 ${ch.number} 章\n`)
+        parts.push(`\n${ch.prose}\n`)
+      }
+    } else {
+      parts.push(title)
+      parts.push('='.repeat(Math.min(title.length * 2, 40)))
+      parts.push(`${data.project.genre} · ${data.project.tone}\n`)
+      for (const ch of chapters) {
+        parts.push(`\n第 ${ch.number} 章`)
+        parts.push('-'.repeat(20))
+        parts.push(`\n${ch.prose}\n`)
+      }
+    }
+
+    const mime = format === 'md' ? 'text/markdown' : 'text/plain'
+    return new Blob([parts.join('\n')], { type: `${mime}; charset=utf-8` })
+  }
 }
